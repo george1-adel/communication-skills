@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>نظام الاختبارات</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <h1>نظام الاختبارات</h1>
+        <button onclick="showPage('quiz-page')" class="btn">ابدأ الامتحان</button>
+        <button onclick="showPage('points-levels-page')" class="btn">عرض النقاط والمستويات</button>
+    </div>
+
+    <div id="points-levels-page" class="page">
+        <h2>نقاطك ومستواك</h2>
+        <div id="points-display">النقاط: 0</div>
+        <div id="level-display">المستوى: 1</div>
+        <button onclick="goBackToMain()" class="btn">عودة</button>
+    </div>
+
+    <!-- نافذة الشات -->
+    <div id="chat-modal" class="chat-modal">
+        <div class="chat-container">
+            <button id="close-chat-btn" class="close-btn">&times;</button>
+            <div id="chat-box" class="chat-box"></div>
+            <div class="chat-input-container">
+                <textarea id="chat-input" placeholder="اكتب سؤالك هنا..." rows="3"></textarea>
+                <button id="send-chat-btn" onclick="sendMessage()">إرسال</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="src/levels.js"></script>
+    <script src="src/script.js"></script>
+    <script type="module" src="../chat.js"></script>
+    <script>
+        let userPoints = 0;
+        let userLevel = 1;
+
+        function updatePointsAndLevel() {
+            document.getElementById('points-display').textContent = `النقاط: ${userPoints}`;
+            document.getElementById('level-display').textContent = `المستوى: ${userLevel}`;
+        }
+
+        function goBackToMain() {
+            showPage('welcome-page');
+        }
+
+        // Call this function whenever the user earns points
+        function addPoints(points) {
+            userPoints += points;
+            updateLevel();
+            updatePointsAndLevel();
+        }
+
+        function updateLevel() {
+            const levelThresholds = [0, 10, 20, 30]; // Example thresholds for levels
+            for (let i = 0; i < levelThresholds.length; i++) {
+                if (userPoints >= levelThresholds[i]) {
+                    userLevel = i + 1;
+                }
+            }
+        }
+    </script>
+</body>
+</html>

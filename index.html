@@ -1,0 +1,749 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>نظام الاختبارات</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .login-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0,0,0,0.45);
+            z-index: 9999;
+            align-items: center;
+            justify-content: center;
+            display: none;
+        }
+        .login-modal.visible {
+             display: flex;
+        }
+        .loading-spinner {
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #3498db;
+            border-radius: 50%;
+            display: none;
+            animation: spin 1s linear infinite;
+            margin-right: 10px;
+        }
+        .loading-spinner.success {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #2ecc71;
+        }
+        .loading-spinner.error {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #e74c3c;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .login-button-content {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        #login-submit-btn {
+            position: relative;
+            transition: all 0.3s ease;
+        }
+        #login-submit-btn:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+        #login-submit-btn.success {
+            background-color: #2ecc71;
+        }
+        #login-submit-btn.error {
+            background-color: #e74c3c;
+        }
+        /* Terms Modal Styles */
+        #terms-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0,0,0,0.45);
+            z-index: 9999;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        #terms-modal.visible {
+            display: flex;
+        }
+        
+        #terms-modal .modal-content {
+            background: #fff;
+            padding: 32px 18px;
+            border-radius: 14px;
+            max-width: 92vw;
+            min-width: 300px;
+            text-align: center;
+            box-shadow: 0 2px 16px rgba(0,0,0,0.2);
+            position: relative;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        #terms-modal .modal-content h3 {
+            color: #333;
+            margin-bottom: 1.1rem;
+            font-size: 1.5rem;
+        }
+
+        #terms-modal .modal-content p {
+            text-align: right;
+            margin-bottom: 1rem;
+            line-height: 1.6;
+            font-size: 1.1rem;
+        }
+
+        #terms-modal .modal-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 1.5rem;
+        }
+
+        #terms-modal .btn {
+            padding: 12px 28px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 1.1rem;
+            transition: all 0.3s ease;
+        }
+
+        #terms-modal .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        #terms-modal #accept-terms {
+            background: #28a745;
+            color: #fff;
+        }
+
+        #terms-modal #reject-terms {
+            background: #dc3545;
+            color: #fff;
+        }
+
+        /* Dark mode support */
+        body.dark-mode #terms-modal .modal-content {
+            background: #2d2d2d;
+            color: #fff;
+        }
+
+        body.dark-mode #terms-modal .modal-content h3 {
+            color: #fff;
+        }
+
+        body.dark-mode #terms-modal .modal-content p {
+            color: #e0e0e0;
+        }
+    </style>
+</head>
+<body>
+    <!-- نافذة الشروط والأحكام -->
+    <div id="terms-modal">
+        <div class="modal-content">
+            <h3>الشروط والأحكام</h3>
+            <div>
+                <p><strong>1. إخلاء المسؤولية:</strong> صاحب المنصة <strong>ليس مرتبطًا بإدارة الكلية</strong> بأي شكل من الأشكال، وأن المنصة مجهود شخصي للمراجعة والدراسات.</p>
+                <p><strong>2. دقة المحتوى:</strong> لا يتحمل صاحب المنصة أي مسؤولية عن <strong>أي أخطاء صياغية</strong> في الأسئلة أو المحتوى.</p>
+                <p><strong>3. حقوق الملكية الفكرية:</strong> جميع الأسئلة والمواد محميّة بحقوق المؤلف، ولا يجوز إعادة نشرها أو استخدامها تجاريًا.</p>
+                <p><strong>4. سياسة الخصوصية:</strong> لا يتم جمع أو مشاركة بيانات شخصية للمستخدمين.</p>
+                <p><strong>5. تحديث الشروط:</strong> يحق لصاحب المنصة تعديل الشروط في أي وقت، وستظهر نافذة الموافقة مجددًا بعد كل تحديث.</p>
+                <p><strong>6. القانون الواجب التطبيق:</strong> تخضع هذه الشروط والأحكام لقوانين جمهورية مصر العربية، وتكون محكمة القاهرة هي المختصة بالنظر في أي نزاع.</p>
+            </div>
+            <div class="modal-buttons">
+                <button id="accept-terms" class="btn">أوافق</button>
+                <button id="reject-terms" class="btn">لا أوافق</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- نافذة الأسئلة المغلوطة -->
+    <div id="wrong-questions-modal" class="modal" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.45); z-index:7000; align-items:center; justify-content:center;">
+        <div style="background:#fff; padding:32px 18px; border-radius:14px; max-width:92vw; min-width:300px; text-align:center; box-shadow:0 2px 16px #0002; position:relative; min-height:200px;">
+            <h3 style="color:#ff6b6b; margin-bottom:1.1rem;">الأسئلة التي أخطأت فيها</h3>
+            <div id="wrong-questions-list" style="margin-bottom:1.2rem;"></div>
+            <div id="no-wrong-questions-msg" style="color:#28a745; font-weight:700; display:none;">لا يوجد أسئلة مغلوطة لم تُحل 🎉</div>
+            <button id="close-wrong-questions-modal" class="btn" style="margin-top:10px;">إغلاق</button>
+        </div>
+    </div>
+
+    <script>
+    // منطق الأسئلة المغلوطة
+    document.addEventListener('DOMContentLoaded', function() {
+        var wrongBtn = document.getElementById('wrong-questions-btn');
+        var wrongModal = document.getElementById('wrong-questions-modal');
+        var wrongList = document.getElementById('wrong-questions-list');
+        var closeWrong = document.getElementById('close-wrong-questions-modal');
+        var noWrongMsg = document.getElementById('no-wrong-questions-msg');
+        if (wrongBtn && wrongModal && wrongList && closeWrong && noWrongMsg) {
+            wrongBtn.onclick = function() {
+                // جلب الأسئلة المغلوطة من localStorage
+                var wrongQuestions = JSON.parse(localStorage.getItem('wrong-questions') || '[]');
+                wrongList.innerHTML = '';
+                if (wrongQuestions.length === 0) {
+                    noWrongMsg.style.display = 'block';
+                } else {
+                    noWrongMsg.style.display = 'none';
+                    wrongQuestions.forEach(function(q, idx) {
+                        var div = document.createElement('div');
+                        div.style = 'background:#ffeaea; border-radius:8px; margin:10px 0; padding:10px;';
+                        div.innerHTML = '<b>س:</b> ' + q.question +
+                            '<br><b>إجابتك:</b> ' + (q.userAnswerText || q.userAnswer) +
+                            '<br><b>الإجابة الصحيحة:</b> ' + (q.correctAnswerText || q.correctAnswer) + '<br>' +
+                            '<button class="btn" style="margin-top:7px; background:#28a745; color:#fff;" onclick="startWrongQuestion(' + idx + ')">حل هذا السؤال</button>';
+                        wrongList.appendChild(div);
+                    });
+                }
+                wrongModal.style.display = 'flex';
+            };
+            closeWrong.onclick = function() { wrongModal.style.display = 'none'; };
+            wrongModal.onclick = function(e) { if (e.target === wrongModal) wrongModal.style.display = 'none'; };
+        }
+    });
+    // دالة بدء حل سؤال مغلوط (تُعرف في script.js)
+    function startWrongQuestion(idx) {
+        if (window.startWrongQuestionReal) window.startWrongQuestionReal(idx);
+    }
+    </script>
+
+    <!-- نافذة تسجيل الدخول -->
+   
+    <script>
+    // التحقق من حالة تسجيل الدخول عند تحميل الصفحة
+    document.addEventListener('DOMContentLoaded', function() {
+        const loginModal = document.getElementById('login-modal');
+        const username = localStorage.getItem('username');
+
+        // إذا لم يتم تسجيل المستخدم، نعرض النافذة
+        if (!username && loginModal) {
+            loginModal.style.display = 'flex';
+            loginModal.classList.add('visible');
+        }
+
+        // إضافة مستمع الأحداث لزر الدخول
+        const loginSubmitBtn = document.getElementById('login-submit-btn');
+        if (loginSubmitBtn) {
+            loginSubmitBtn.addEventListener('click', submitUsername);
+        }
+    });
+    </script>
+
+    <!-- زر تبديل الوضع الداكن/الفاتح -->
+    <button id="darkmode-toggle" style="position:fixed;top:18px;left:18px;z-index:9999;background:#222;color:#fff;border:none;border-radius:50%;width:44px;height:44px;font-size:1.3rem;cursor:pointer;box-shadow:0 2px 8px #0003;" title="تبديل الوضع الداكن">🌙</button>
+    <div class="container">
+        <div id="welcome-page" class="page active">
+            <h1>  ادخل امتحن </h1>
+            <p>    الحل الكتير هيثبت المعلومة وهيديك معلومات جديده</p>
+            <button onclick="showPage('chapter-select-page')" class="btn">ادخل</button>
+        </div>
+
+        <div id="chapter-select-page" class="page">
+            <h2 id="chapter-select-title">اختار الفصل أو المنهج</h2>
+            <div id="chapter-options" class="count-options">
+                <button class="btn" onclick="selectChapter(1)">الفصل الاول</button>
+                <button class="btn" onclick="selectChapter(2)">الفصل الثاني</button>
+                <button class="btn" onclick="selectChapter(3)">الفصل الثالث</button>
+                <button class="btn" onclick="selectChapter(4)">الفصل الرابع</button>
+                <button class="btn" onclick="selectChapter(5)">امتحان شامل (60 سؤال)</button>
+                <!-- <button class="btn" onclick="selectChapter(6)">الفصل السادس</button> -->
+                <!-- <button class="btn btn-exam1" style="background:#ffc107; color:#222; margin-top:10px;" onclick="selectExam1()">الامتحان الأول (40 سؤال شامل)</button> -->
+                <button class="btn btn-full-curriculum" style="background:#28a745; color:#fff; margin-top:10px;" onclick="selectFullCurriculum()">المنهج كامل</button>
+                <!-- <button class="btn" id="wrong-questions-btn" style="background:#ff6b6b; color:#fff; font-weight:700; margin-top:10px;">الأسئلة المغلوطة</button> -->
+            <!-- زر الأسئلة المغلوطة كان هنا وتمت إزالته ليظهر فقط مع الفصول -->
+            </div>
+            <div style="margin-top: 1rem; text-align: center;">
+                <button type="button" class="btn points-btn" id="show-points-btn" onclick="window.location.href='quiz-project/src/points-levels.html'">عرض النقاط والمستوى</button>
+            </div>
+        </div>
+
+        <div id="question-count-page" class="page">
+            <h2>اختار عدد الأسئلة</h2>
+            <div class="count-options">
+                <button onclick="showTimerModal(5)" class="btn">5 أسئلة</button>
+                <button onclick="showTimerModal(10)" class="btn">10 أسئلة</button>
+                <button onclick="showTimerModal(15)" class="btn">15 أسئلة</button>
+                <button onclick="showTimerModal(20)" class="btn">20 أسئلة</button>
+                <button onclick="showTimerModal(40)" class="btn">40 اسئلة</button>
+                <button onclick="showTimerModal('all')" class="btn btn-full-chapter" style="background:#ffc107; color:#222; margin-top:10px;">أسئلة الفصل كاملا</button>
+            </div>
+        </div>
+
+        <div id="quiz-page" class="page">
+            <div class="quiz-header">
+                <span id="question-number"></span>
+                <span id="timer"></span>
+            </div>
+            <div id="question-container" class="container">
+                <div id="timer" style="font-size:1.2rem; color:#007bff; text-align:center; margin-bottom:10px; display:none;"></div>
+                <!-- شريط التقدم -->
+                <div id="progress-bar-container" style="margin-bottom: 20px;">
+                    <div id="progress-bar" style="height: 20px; background: #e9ecef; border-radius: 10px; overflow: hidden;">
+                        <div id="progress-bar-fill" style="height: 100%; width: 0; background: #28a745; transition: width 0.4s;"></div>
+                    </div>
+                    <div id="progress-text" style="text-align: center; margin-top: 5px; font-weight: bold;"></div>
+                </div>
+                <h3 id="question-text"></h3>
+                <div id="answers-container"></div>
+            </div>
+            <div id="quiz-navigation">
+                <button id="prev-btn" class="btn" onclick="prevQuestion()">السابق</button>
+                <button id="next-btn" class="btn" onclick="nextQuestion()">التالي</button>
+                <button id="submit-btn" class="btn" onclick="submitQuiz()" style="display:none">إنهاء الاختبار</button>
+            </div>
+        </div>
+
+        <div id="results-page" class="page">
+            <h2>نتيجتك</h2>
+            <p>جبت <span id="score"></span> من <span id="total-questions"></span></p>
+            <button class="btn" onclick="showReviewPage()">راجع إجاباتك</button>
+            <button class="btn" onclick="showLeaderboardPage()">شوف المتصدرين</button>
+            <button class="btn" onclick="window.location.href='quiz-project/src/points-levels.html'">صفحة المكافآت</button>
+            <button onclick="startNewExam()" class="btn">ابدأ امتحان جديد</button>
+        </div>
+
+        <div id="review-page" class="page">
+            <h2>مراجعة الإجابات</h2>
+            <div id="review-container"></div>
+            <button id="copy-review-btn" class="btn" style="margin: 15px 0;">انسخ المراجعة للنص</button>
+            <button class="btn" onclick="showPage('results-page')">ارجع للنتيجة</button>
+        </div>
+
+        <div id="leaderboard-page" class="page">
+            <h2>جدول المتصدرين</h2>
+            <div id="leaderboard-list" style="margin: 2rem 0;"></div>
+            <button class="btn" onclick="showPage('welcome-page')">ارجع للرئيسية</button>
+        </div>
+    </div>
+    <!-- نافذة اختيار المؤقت -->
+    <div id="timer-modal" class="modal" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.4); z-index:1000; align-items:center; justify-content:center;">
+        <div style="background:#fff; padding:30px 20px; border-radius:10px; max-width:90vw; text-align:center; box-shadow:0 2px 10px #0002;">
+            <h3>عايز تشغل المؤقت وانت بتحل؟</h3>
+            <p>ممكن تختار تحل بوقت أو من غير وقت.</p>
+            <button id="start-with-timer" class="btn" style="margin:10px;">شغل المؤقت</button>
+            <button id="start-without-timer" class="btn" style="margin:10px;">من غير مؤقت</button>
+        </div>
+    </div>
+    <!-- نافذة تأكيد إرسال الاختبار -->
+    <div id="submit-modal" class="modal" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.4); z-index:1000; align-items:center; justify-content:center;">
+        <div style="background:#fff; padding:30px 20px; border-radius:10px; max-width:90vw; text-align:center; box-shadow:0 2px 10px #0002;">
+            <h3>عايز تسلم الامتحان؟</h3>
+            <p>متأكد إنك عايز تسلم؟ مش هتعرف تعدل بعد كده.</p>
+            <button id="confirm-submit-btn" class="btn" style="margin:10px;">سلم الامتحان</button>
+            <button id="cancel-submit-btn" class="btn" style="margin:10px;">لأ، استنى</button>
+        </div>
+    </div>
+   
+    <!-- نافذة جروب الواتساب عند الضغط على i -->
+    <div id="telegram-modal" class="modal" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.4); z-index:6000; align-items:center; justify-content:center;">
+        <div style="background:#fff; padding:28px 18px; border-radius:12px; max-width:90vw; min-width:300px; text-align:center; box-shadow:0 2px 16px #0002; position:relative;">
+            <h3 style="color:#25d366; margin-bottom:1rem;">جروب الواتساب الرسمي</h3>
+            <div style="font-size:1.08rem; color:#222; margin-bottom:1.2rem;">
+                تابع كل أخبار التحديثات والمواد الجديدة على جروب الواتساب الخاص بالتطبيق 👇<br>
+                <a href="https://whatsapp.com/channel/0029Vb6274EDjiOfeqISEV2B" target="_blank" style="display:inline-block; margin:1rem 0 0.5rem 0; color:#25d366; font-weight:bold; text-decoration:underline; font-size:1.08rem;">https://whatsapp.com/channel/0029Vb6274EDjiOfeqISEV2B</a>
+            </div>
+            <button id="close-telegram-modal" class="btn" style="min-width:100px; font-size:1rem;">إغلاق</button>
+        </div>
+    </div>
+    <!-- زر إحصائية عدد الأسئلة المجاب عليها (جديد) -->
+    <button id="solved-btn" class="star-btn" title="عدد الأسئلة التي أجبت عليها">
+        <span style="font-weight:bold; font-family:sans-serif;">★</span>
+    </button>
+    <!-- نافذة عدد الأسئلة المجاب عليها (جديد) -->
+    <div id="solved-modal" class="modal" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.4); z-index:3000; align-items:center; justify-content:center;">
+        <div style="background:#fff; padding:30px 20px; border-radius:10px; max-width:90vw; min-width:300px; text-align:center; box-shadow:0 2px 10px #0002; position:relative;">
+            <button id="close-solved-modal" style="position:absolute; top:10px; right:10px; background:none; border:none; font-size:1.5rem; color:#888; cursor:pointer;">&times;</button>
+            <h3>إحصائية الأسئلة المجاب عليها</h3>
+            <div id="solved-modal-count" style="font-size:1.3rem; color:#ffc107; margin: 20px 0;"></div>
+        </div>
+    </div>
+
+    <!-- نافذة النقاط المكتسبة بعد الامتحان -->
+    <div id="earned-points-modal" class="modal" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.45); z-index:5000; align-items:center; justify-content:center;">
+        <div class="earned-points-modern-box">
+            <button id="close-earned-points-modal" class="modern-close-btn">&times;</button>
+            <div class="earned-points-icon">🎉</div>
+            <h3 class="earned-points-title">مبروك! حصلت على نقاط جديدة</h3>
+            <div class="earned-points-desc">أضفنا لك <span id="earned-points-value" class="earned-points-value">0</span> نقطة في هذا الامتحان</div>
+            <div class="earned-points-bar-wrap">
+                <div class="earned-points-bar-bg">
+                    <div id="earned-points-bar" class="earned-points-bar"></div>
+                </div>
+            </div>
+            <button class="btn earned-points-btn" id="close-earned-points-btn">حسناً</button>
+        </div>
+    </div>
+
+    <!-- نافذة رسائل الخطأ -->
+    <div id="error-modal" class="modal" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.45); z-index:6000; align-items:center; justify-content:center;">
+        <div style="background:#fff; padding:32px 18px; border-radius:14px; max-width:92vw; min-width:300px; text-align:center; box-shadow:0 2px 16px #0002; position:relative;">
+            <div style="color:#ff6b6b; font-size:3rem; margin-bottom:1rem;">⚠️</div>
+            <h3 style="color:#ff6b6b; margin-bottom:1rem;">تنبيه</h3>
+            <p id="error-message" style="font-size:1.1rem; color:#333; margin-bottom:1.5rem;"></p>
+            <button id="close-error-modal" class="btn" style="background:#ff6b6b; color:#fff; min-width:120px;">حسناً</button>
+        </div>
+    </div>
+
+    <!-- Chat Button -->
+    <button id="chat-toggle-btn" style="position: fixed; bottom: 20px; left: 20px; z-index: 10000; background: #007bff; color: white; border: none; border-radius: 50%; width: 60px; height: 60px; font-size: 24px; cursor: pointer; box-shadow: 0 2px 10px rgba(0,0,0,0.2); display: flex; justify-content: center; align-items: center; transition: transform 0.2s;">
+        🤖
+    </button>
+
+    <!-- Chat Modal -->
+    <div id="chat-modal" style="display: none; position: fixed; bottom: 90px; left: 20px; z-index: 10000; width: 350px; height: 500px; background: white; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.3); flex-direction: column; overflow: hidden;">
+        <div class="chat-header" style="padding: 15px; background: #007bff; color: white; display: flex; justify-content: space-between; align-items: center;">
+            <span style="font-weight: bold; font-size: 1rem;"> Ai مخصص لمناقشة اسئلة مهارات التواصل</span>
+            <button id="close-chat-btn" style="background: none; border: none; color: white; font-size: 20px; cursor: pointer; padding: 0 5px;">×</button>
+        </div>
+        <div id="chat-box" style="flex-grow: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; background: #f8f9fa;">
+            <!-- Messages will be added here dynamically -->
+        </div>
+        <div class="chat-input-area" style="padding: 15px; background: white; border-top: 1px solid #eee; display: flex; gap: 10px;">
+            <input type="text" id="chat-input" placeholder="اكتب رسالتك..." style="flex-grow: 1; padding: 10px 15px; border: 1px solid #ddd; border-radius: 20px; outline: none; font-size: 0.95rem;">
+            <button id="send-chat-btn" style="background: #007bff; color: white; border: none; border-radius: 20px; padding: 10px 20px; cursor: pointer; font-weight: bold; transition: background 0.2s;">إرسال</button>
+        </div>
+    </div>
+
+    <style>
+    /* نافذة النقاط المكتسبة بعد النتيجة - ستايل عصري */
+    .earned-points-modern-box {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: #fff;
+        border-radius: 18px;
+        box-shadow: 0 4px 32px 0 rgba(80,40,120,0.18);
+        padding: 38px 28px 32px 28px;
+        min-width: 320px;
+        max-width: 92vw;
+        text-align: center;
+        position: relative;
+        animation: fadeInScale 0.7s cubic-bezier(.23,1.12,.32,1) both;
+    }
+    @keyframes fadeInScale {
+        0% { opacity: 0; transform: scale(0.85); }
+        100% { opacity: 1; transform: scale(1); }
+    }
+    .modern-close-btn {
+        position: absolute;
+        top: 12px;
+        left: 12px;
+        background: none;
+        border: none;
+        color: #fff;
+        font-size: 1.7rem;
+        cursor: pointer;
+        transition: color 0.2s;
+        z-index: 2;
+    }
+    .modern-close-btn:hover { color: #ffd700; }
+    .earned-points-icon {
+        font-size: 2.7rem;
+        margin-bottom: 0.5rem;
+        filter: drop-shadow(0 2px 8px #fff2);
+    }
+    .earned-points-title {
+        font-size: 1.45rem;
+        font-weight: bold;
+        margin-bottom: 0.7rem;
+        letter-spacing: 0.5px;
+        text-shadow: 0 2px 8px #0002;
+    }
+    .earned-points-desc {
+        font-size: 1.15rem;
+        margin-bottom: 1.2rem;
+        color: #ffe;
+    }
+    .earned-points-value {
+        color: #ffd700;
+        font-size: 1.6rem;
+        font-weight: bold;
+        text-shadow: 0 2px 8px #0002;
+    }
+    .earned-points-bar-wrap {
+        width: 100%;
+        max-width: 340px;
+        margin: 0 auto 1.3rem auto;
+    }
+    .earned-points-bar-bg {
+        background: rgba(255,255,255,0.18);
+        border-radius: 10px;
+        height: 22px;
+        overflow: hidden;
+        box-shadow: 0 1px 6px #0001 inset;
+    }
+    .earned-points-bar {
+        background: linear-gradient(90deg, #ffd700 0%, #ffb347 100%);
+        width: 0%;
+        height: 100%;
+        border-radius: 10px;
+        transition: width 1s cubic-bezier(.23,1.12,.32,1);
+        box-shadow: 0 2px 8px #ffd70044;
+    }
+    .earned-points-btn {
+        background: #ffd700;
+        color: #764ba2;
+        font-weight: bold;
+        border-radius: 7px;
+        margin-top: 10px;
+        min-width: 110px;
+        font-size: 1.08rem;
+        box-shadow: 0 2px 8px #ffd70033;
+        border: none;
+        transition: background 0.2s, color 0.2s;
+    }
+    .earned-points-btn:hover {
+        background: #fff;
+        color: #764ba2;
+    }
+    /* الوضع الداكن */
+    body.dark-mode {
+        background: #181824;
+        color: #e0e0e0;
+    }
+    body.dark-mode .container,
+    body.dark-mode .page,
+    body.dark-mode .modal > div,
+    body.dark-mode .earned-points-modern-box {
+        background: #232336;
+        color: #e0e0e0;
+        box-shadow: 0 2px 16px #0006;
+    }
+    body.dark-mode h1, 
+    body.dark-mode h2, 
+    body.dark-mode h3, 
+    body.dark-mode h4, 
+    body.dark-mode h5, 
+    body.dark-mode h6 {
+        color: #ffd700;
+        text-shadow: none;
+    }
+    body.dark-mode .btn,
+    body.dark-mode .points-btn,
+    body.dark-mode .star-btn,
+    body.dark-mode .info-btn {
+        background: #333;
+        color: #ffd700;
+        border: 1px solid #444;
+        box-shadow: 0 2px 8px #0002;
+    }
+    body.dark-mode .btn:hover {
+        background: #444;
+        color: #fff;
+    }
+    body.dark-mode #progress-bar,
+    body.dark-mode .earned-points-bar-bg {
+        background: #333;
+    }
+    body.dark-mode #progress-bar-fill,
+    body.dark-mode .earned-points-bar {
+        background: linear-gradient(90deg, #ffd700 0%, #ffb347 100%);
+    }
+    body.dark-mode .answer-option {
+        background: #232336;
+        color: #ffd700;
+        border: 1px solid #444;
+    }
+    body.dark-mode .answer-option.selected {
+        background: #ffd700;
+        color: #232336;
+    }
+    body.dark-mode .review-item {
+        background: #232336;
+        border: 1px solid #444;
+    }
+    body.dark-mode .explanation {
+        background: #181824;
+        border: 1px solid #333;
+        color: #ffd700;
+    }
+    body.dark-mode .modal {
+        background: rgba(0,0,0,0.7);
+    }
+    body.dark-mode input, 
+    body.dark-mode textarea {
+        background: #232336;
+        color: #ffd700;
+        border: 1px solid #444;
+    }
+    body.dark-mode #darkmode-toggle {
+        background: #ffd700;
+        color: #232336;
+    }
+
+    /* تنسيق نافذة الخطأ */
+    #error-modal .modal-content {
+        animation: slideIn 0.3s ease-out;
+    }
+
+    @keyframes slideIn {
+        from {
+            transform: translateY(-20px);
+            opacity: 0;
+        }
+        to {
+            transform: translateY(0);
+            opacity: 1;
+        }
+    }
+
+    #error-modal .btn {
+        transition: all 0.2s ease;
+    }
+
+    #error-modal .btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(255,107,107,0.3);
+    }
+
+    /* Chat animations */
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Dark mode chat styles */
+    body.dark-mode #chat-modal {
+        background: #232336;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+    }
+
+    body.dark-mode #chat-box {
+        background: #181824;
+    }
+
+    body.dark-mode .chat-input-area {
+        background: #232336;
+        border-top-color: #333;
+    }
+
+    body.dark-mode #chat-input {
+        background: #181824;
+        color: #e0e0e0;
+        border-color: #333;
+    }
+
+    body.dark-mode #chat-input::placeholder {
+        color: #888;
+    }
+
+    body.dark-mode .bot-message {
+        background: #232336;
+        color: #e0e0e0;
+    }
+
+    body.dark-mode .user-message {
+        background: #007bff;
+        color: white;
+    }
+    </style>
+
+    <script src="quiz-project/src/questions.js"></script>
+    <script src="quiz-project/src/chapters/chapter2.js"></script>
+    <script src="quiz-project/src/chapters/chapter3.js"></script>
+    <script src="quiz-project/src/chapters/chapter4.js"></script>
+    <script src="quiz-project/src/chapters/chapter5.js"></script>
+    <script src="quiz-project/src/script.js"></script>
+    <script src="chat.js" type="module"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js"></script>
+    <script>
+    // نافذة التحديثات تمت إزالتها بناءً على طلب المستخدم
+    window.addEventListener('DOMContentLoaded', function() {
+        // نافذة جروب التليجرام عند الضغط على زر i
+        var infoBtn = document.getElementById('info-btn');
+        var telegramModal = document.getElementById('telegram-modal');
+        var closeTelegram = document.getElementById('close-telegram-modal');
+        if (infoBtn && telegramModal && closeTelegram) {
+            infoBtn.onclick = function() {
+                telegramModal.style.display = 'flex';
+            };
+            closeTelegram.onclick = function() {
+                telegramModal.style.display = 'none';
+            };
+            telegramModal.onclick = function(e) {
+                if (e.target === telegramModal) telegramModal.style.display = 'none';
+            };
+        }
+    });
+    </script>
+    <script>
+    // دالة لعرض رسالة الخطأ
+    function showError(message) {
+        const errorModal = document.getElementById('error-modal');
+        const errorMessage = document.getElementById('error-message');
+        const closeBtn = document.getElementById('close-error-modal');
+
+        if (errorModal && errorMessage && closeBtn) {
+            errorMessage.textContent = message;
+            errorModal.style.display = 'flex';
+
+            // إغلاق النافذة عند الضغط على الزر
+            closeBtn.onclick = function() {
+                errorModal.style.display = 'none';
+            };
+
+            // إغلاق النافذة عند الضغط خارجها
+            errorModal.onclick = function(e) {
+                if (e.target === errorModal) {
+                    errorModal.style.display = 'none';
+                }
+            };
+        }
+    }
+    </script>
+    <script>
+        // تثبيت وظيفة الوضع الداكن
+        document.addEventListener('DOMContentLoaded', function() {
+            const darkModeToggle = document.getElementById('darkmode-toggle');
+            const body = document.body;
+            
+            if (darkModeToggle) {
+                // التحقق من التفضيل المحفوظ
+                const isDarkMode = localStorage.getItem('darkMode') === 'enabled';
+                
+                // تطبيق الوضع الأولي
+                if (isDarkMode) {
+                    body.classList.add('dark-mode');
+                    darkModeToggle.textContent = '☀️';
+                } else {
+                    body.classList.remove('dark-mode');
+                    darkModeToggle.textContent = '🌙';
+                }
+                
+                // إضافة مستمع الحدث
+                darkModeToggle.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    
+                    body.classList.toggle('dark-mode');
+                    
+                    // حفظ التفضيل
+                    if (body.classList.contains('dark-mode')) {
+                        localStorage.setItem('darkMode', 'enabled');
+                        darkModeToggle.textContent = '☀️';
+                    } else {
+                        localStorage.setItem('darkMode', 'disabled');
+                        darkModeToggle.textContent = '🌙';
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>
