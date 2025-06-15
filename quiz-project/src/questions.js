@@ -38,7 +38,7 @@ window.questions = [
     },
     {
         chapter: 1,
-        question: "من خرافات التواصل البشري أن التواصل الفعال هو مهارة مكتسبة.",
+        question: "من خرافات التواصل البشري أن التواصل الفعال ليس مهارة مكتسبة.",
         answers: ["صح", "خطأ"],
         correctAnswer: 0,
         explanation: "هذه العبارة مذكورة مباشرة تحت عنوان 'خرافات الاتصال البشري'."
@@ -457,12 +457,12 @@ window.questions = [
         chapter: 1,
         question: "أي من منصات التواصل الاجتماعي تُصنف ضمن التواصل الكمبيوتري في الفصل الأول؟",
         answers: [
-            "TikTok",
+            "جميع ما سبق",
             "Instagram",
             "Facebook",
             "Snapchat"
         ],
-        correctAnswer: 2,
+        correctAnswer: 0,
         explanation: "Facebook و Myspace مذكورتان كأمثلة على التواصل الكمبيوتري."
     },
     {
